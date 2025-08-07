@@ -7,19 +7,21 @@ import Darwin
 
 @_cdecl("ft_malloc_impl")
 public func ft_malloc_impl(_ size: UInt) -> UnsafeMutableRawPointer? {
-    // Temporary stub to verify symbol export and linking
-    // Return NULL for now to avoid accidental allocations before allocator exists
-    return nil
+    ft_mutex_init_if_needed()
+    ft_lock()
+    defer { ft_unlock() }
+    let result = ft_internal_alloc(Int(size))
+    return result
 }
 
 @_cdecl("ft_free_impl")
 public func ft_free_impl(_ ptr: UnsafeMutableRawPointer?) {
-    // Temporary stub
+    // Will be implemented in S06; currently a no-op.
 }
 
 @_cdecl("ft_realloc_impl")
 public func ft_realloc_impl(_ ptr: UnsafeMutableRawPointer?, _ size: UInt) -> UnsafeMutableRawPointer? {
-    // Temporary stub
+    // Implemented in S09.
     return nil
 }
 

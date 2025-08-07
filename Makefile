@@ -47,10 +47,11 @@ symlink: $(LIB_PATH)
 symbols: $(LIB_PATH)
 	@echo "Exported symbols:" && $(NM) $(LIB_PATH) | egrep "[[:space:]](malloc|free|realloc|show_alloc_mem)$$" || true
 
-tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_DIR)/tests/test_zone
+tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_DIR)/tests/test_zone $(BUILD_DIR)/tests/test_alloc
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_util | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_metadata | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_zone | cat
+	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_alloc | cat
 
 $(BUILD_DIR)/tests:
 	@mkdir -p $(BUILD_DIR)/tests
@@ -63,6 +64,9 @@ $(BUILD_DIR)/tests/test_metadata: all $(BUILD_DIR)/tests tests/c/test_metadata.c
 
 $(BUILD_DIR)/tests/test_zone: all $(BUILD_DIR)/tests tests/c/test_zone.c
 	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_zone tests/c/test_zone.c -ldl
+
+$(BUILD_DIR)/tests/test_alloc: all $(BUILD_DIR)/tests tests/c/test_alloc.c
+	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_alloc tests/c/test_alloc.c -ldl
 
 test: all symbols tests-c
 
