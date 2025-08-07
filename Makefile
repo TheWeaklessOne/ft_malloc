@@ -109,7 +109,14 @@ $(BUILD_DIR)/tests/test_mt: all $(BUILD_DIR)/tests tests/c/test_mt.c
 test: all symbols tests-c
 
 docs:
-	@echo "[docs] DocC generation requires Swift toolchain with docc plugin (Xcode or swift-docc-plugin). Skipping if unavailable." && mkdir -p build/docs && cp -R Sources/FTMalloc.docc build/docs/ || true
+	@mkdir -p build/docs
+	@swift package --allow-writing-to-directory build/docs \
+		generate-documentation \
+		--target FTMallocDocs \
+		--output-path build/docs \
+		--transform-for-static-hosting \
+		--hosting-base-path FTMallocDocs \
+	|| { echo "[docs] Fallback: copying DocC sources"; cp -R Sources/FTMalloc.docc build/docs/; }
 
 linux-setup:
 	@bash tools/linux-setup.sh
