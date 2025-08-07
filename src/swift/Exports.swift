@@ -10,6 +10,7 @@ public func ft_malloc_impl(_ size: UInt) -> UnsafeMutableRawPointer? {
     ft_mutex_init_if_needed()
     ft_lock()
     defer { ft_unlock() }
+    if size == 0 { return nil }
     let result = ft_internal_alloc(Int(size))
     return result
 }
