@@ -14,6 +14,7 @@ LIB_SYMLINK := $(BUILD_DIR)/libft_malloc.so
 
 SWIFTC := swiftc
 SWIFT_SOURCES := $(shell find src/swift -name '*.swift' 2>/dev/null)
+C_SOURCES := $(shell find src/c -name '*.c' 2>/dev/null)
 
 SWIFT_COMMON_FLAGS := -O -emit-library -parse-as-library -module-name FTMalloc
 
@@ -33,12 +34,12 @@ all: $(LIB_PATH) symlink
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
-$(LIB_PATH): $(BUILD_DIR) $(SWIFT_SOURCES)
+$(LIB_PATH): $(BUILD_DIR) $(SWIFT_SOURCES) $(C_SOURCES)
 	@if [ -z "$(SWIFT_SOURCES)" ]; then \
 		echo "No Swift sources found in src/swift" >&2; \
 		exit 1; \
 	fi
-	$(SWIFTC) $(SWIFT_COMMON_FLAGS) $(SWIFT_PLATFORM_FLAGS) $(SWIFT_SOURCES) -o $(LIB_PATH)
+	$(SWIFTC) $(SWIFT_COMMON_FLAGS) $(SWIFT_PLATFORM_FLAGS) $(SWIFT_SOURCES) $(C_SOURCES) -o $(LIB_PATH)
 
 symlink: $(LIB_PATH)
 	@ln -sfn $(LIB_NAME) $(LIB_SYMLINK)
