@@ -47,7 +47,7 @@ symlink: $(LIB_PATH)
 symbols: $(LIB_PATH)
 	@echo "Exported symbols:" && $(NM) $(LIB_PATH) | egrep "[[:space:]](malloc|free|realloc|show_alloc_mem)$$" || true
 
-tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_DIR)/tests/test_zone $(BUILD_DIR)/tests/test_alloc $(BUILD_DIR)/tests/test_free $(BUILD_DIR)/tests/test_large $(BUILD_DIR)/tests/test_api_basic
+tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_DIR)/tests/test_zone $(BUILD_DIR)/tests/test_alloc $(BUILD_DIR)/tests/test_free $(BUILD_DIR)/tests/test_large $(BUILD_DIR)/tests/test_api_basic $(BUILD_DIR)/tests/test_realloc $(BUILD_DIR)/tests/test_show
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_util | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_metadata | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_zone | cat
@@ -55,6 +55,8 @@ tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_D
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_free | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_large | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_api_basic | cat
+	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_realloc | cat
+	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_show | cat
 
 $(BUILD_DIR)/tests:
 	@mkdir -p $(BUILD_DIR)/tests
@@ -79,6 +81,12 @@ $(BUILD_DIR)/tests/test_large: all $(BUILD_DIR)/tests tests/c/test_large.c
 
 $(BUILD_DIR)/tests/test_api_basic: all $(BUILD_DIR)/tests tests/c/test_api_basic.c
 	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_api_basic tests/c/test_api_basic.c -ldl
+
+$(BUILD_DIR)/tests/test_realloc: all $(BUILD_DIR)/tests tests/c/test_realloc.c
+	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_realloc tests/c/test_realloc.c -ldl
+
+$(BUILD_DIR)/tests/test_show: all $(BUILD_DIR)/tests tests/c/test_show.c
+	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_show tests/c/test_show.c -ldl
 
 test: all symbols tests-c
 

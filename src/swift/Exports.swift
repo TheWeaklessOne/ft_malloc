@@ -25,13 +25,15 @@ public func ft_free_impl(_ ptr: UnsafeMutableRawPointer?) {
 
 @_cdecl("ft_realloc_impl")
 public func ft_realloc_impl(_ ptr: UnsafeMutableRawPointer?, _ size: UInt) -> UnsafeMutableRawPointer? {
-    // Implemented in S09.
-    return nil
+    ft_mutex_init_if_needed()
+    ft_lock()
+    defer { ft_unlock() }
+    // realloc policy: if ptr == NULL -> malloc(size); if size == 0 -> free(ptr), return NULL
+    if ptr == nil { return ft_internal_alloc(Int(size)) }
+    if size == 0 { ft_internal_free(ptr); return nil }
+    return ft_internal_realloc(ptr, Int(size))
 }
 
-@_cdecl("ft_show_alloc_mem_impl")
-public func ft_show_alloc_mem_impl() {
-    // Temporary stub: no output
-}
+// show_alloc_mem is implemented in Introspection.swift
 
 

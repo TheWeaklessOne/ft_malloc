@@ -222,4 +222,50 @@ public func ft_internal_free(_ payload: UnsafeMutableRawPointer?) {
     }
 }
 
+public func ft_internal_realloc(_ ptr: UnsafeMutableRawPointer?, _ newUserSize: Int) -> UnsafeMutableRawPointer? {
+    if ptr == nil { return ft_internal_alloc(newUserSize) }
+    if newUserSize == 0 { ft_internal_free(ptr); return nil }
+    let newSize = alignUserSize(newUserSize)
+    let bh = (ptr! - blockHeaderSize()).assumingMemoryBound(to: BlockHeader.self)
+    if bh.pointee.isLarge {
+        // For simplicity, allocate new and copy; advanced: try mremap or remap on Linux
+        guard let np = ft_internal_alloc(newUserSize) else { return nil }
+        memcpy(np, ptr!, min(newSize, bh.pointee.size))
+        ft_internal_free(ptr)
+        return np
+    }
+    // Try in-place grow into next free block
+    if let n = (bh.pointee.next?.assumingMemoryBound(to: BlockHeader.self)), n.pointee.isFree {
+        let combined = bh.pointee.size + blockHeaderSize() + n.pointee.size
+        if combined >= newSize {
+            bh.pointee.next = n.pointee.next
+            if let nn = n.pointee.next { blockHeaderPtr(nn).pointee.prev = UnsafeMutableRawPointer(bh) }
+            bh.pointee.size = combined
+            if let zoneBase = bh.pointee.zoneBase {
+                let zh = header(zoneBase)
+                // split to exact if big remainder
+                maybeSplitBlock(bh, need: newSize, zoneHeader: zh)
+            }
+            return ptr
+        }
+    }
+    // Shrink in place
+    if newSize <= bh.pointee.size {
+        if let zoneBase = bh.pointee.zoneBase {
+            let zh = header(zoneBase)
+            let old = bh.pointee.size
+            maybeSplitBlock(bh, need: newSize, zoneHeader: zh)
+            zh.pointee.usedBytes &-= (old - newSize)
+        } else {
+            bh.pointee.size = newSize
+        }
+        return ptr
+    }
+    // Fallback move
+    guard let np = ft_internal_alloc(newUserSize) else { return nil }
+    memcpy(np, ptr!, bh.pointee.size)
+    ft_internal_free(ptr)
+    return np
+}
+
 
