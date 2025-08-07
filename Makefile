@@ -20,7 +20,7 @@ SWIFT_COMMON_FLAGS := -O -emit-library -parse-as-library -module-name FTMalloc
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-    SWIFT_PLATFORM_FLAGS :=
+    SWIFT_PLATFORM_FLAGS := -Xlinker -lpthread
     NM := nm -D
 else
     SWIFT_PLATFORM_FLAGS :=

@@ -15,13 +15,14 @@ if ! multipass info "$VM_NAME" >/dev/null 2>&1; then
 fi
 
 TMPDIR_HOST=$(mktemp -d)
-rsync -a --delete --exclude '.git' ./ "$TMPDIR_HOST/"
+rsync -a --delete --exclude '.git' ./ "$TMPDIR_HOST/project/"
 
 echo "[linux-test] transferring project to VM" >&2
-multipass transfer --recursive "$TMPDIR_HOST/" "$VM_NAME:/home/ubuntu/$PROJECT_NAME"
+multipass exec "$VM_NAME" -- bash -lc "rm -rf $PROJECT_NAME && mkdir -p $PROJECT_NAME"
+multipass transfer --recursive "$TMPDIR_HOST/project/" "$VM_NAME:/home/ubuntu/$PROJECT_NAME/"
 
 echo "[linux-test] building and testing inside VM" >&2
-multipass exec "$VM_NAME" -- bash -lc "cd $PROJECT_NAME && make clean all test | cat"
+multipass exec "$VM_NAME" -- bash -lc "cd $PROJECT_NAME && ls -la && head -n 5 Makefile | sed -n '1,5p' && make clean all test | cat"
 
 echo "[linux-test] done."
 
