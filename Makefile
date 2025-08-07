@@ -27,7 +27,7 @@ else
     NM := nm -gU
 endif
 
-.PHONY: all clean fclean re test docs symbols
+.PHONY: all clean fclean re test docs symbols tests-c
 
 all: $(LIB_PATH) symlink
 
@@ -47,8 +47,16 @@ symlink: $(LIB_PATH)
 symbols: $(LIB_PATH)
 	@echo "Exported symbols:" && $(NM) $(LIB_PATH) | egrep "[[:space:]](malloc|free|realloc|show_alloc_mem)$$" || true
 
-test: all symbols
-	@echo "[test] Placeholder: tests will be added in subsequent steps"
+tests-c: $(BUILD_DIR)/tests/test_util
+	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_util | cat
+
+$(BUILD_DIR)/tests:
+	@mkdir -p $(BUILD_DIR)/tests
+
+$(BUILD_DIR)/tests/test_util: all $(BUILD_DIR)/tests tests/c/test_util.c
+	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_util tests/c/test_util.c -ldl
+
+test: all symbols tests-c
 
 docs:
 	@echo "[docs] Placeholder: DocC build will be added later"
