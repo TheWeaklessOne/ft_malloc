@@ -4,7 +4,7 @@
 static void write_str(const char *s) {
     const char *p = s;
     while (*p) p++;
-    write(STDOUT_FILENO, s, (size_t)(p - s));
+    (void)write(STDOUT_FILENO, s, (size_t)(p - s));
 }
 
 static void write_char(char c) { (void)write(STDOUT_FILENO, &c, 1); }
@@ -17,7 +17,7 @@ static void write_hex_u64(uint64_t v) {
         int shift = (15 - i) * 4;
         buf[2 + i] = hex[(v >> shift) & 0xF];
     }
-    write(STDOUT_FILENO, buf, sizeof(buf));
+    (void)write(STDOUT_FILENO, buf, sizeof(buf));
 }
 
 static void write_dec_u64(uint64_t v) {

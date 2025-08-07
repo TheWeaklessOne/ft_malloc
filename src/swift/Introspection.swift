@@ -15,7 +15,7 @@ func ft_print_total(_ total: UInt)
 
 @inline(__always)
 private func cstr(_ s: String) -> [CChar] {
-    var arr = Array(s.utf8CString)
+    let arr = Array(s.utf8CString)
     return arr
 }
 
@@ -27,7 +27,7 @@ public func ft_show_alloc_mem_impl() {
     var total: UInt = 0
     // TINY, SMALL, LARGE in that order
     func dumpList(_ label: String, _ head: UnsafeMutableRawPointer?) {
-        var labelC = cstr(label)
+        let labelC = cstr(label)
         var z = head
         if let base = z { labelC.withUnsafeBufferPointer { buf in ft_print_zone_header(buf.baseAddress!, UnsafeRawPointer(base)) } }
         while let base = z {
@@ -50,7 +50,7 @@ public func ft_show_alloc_mem_impl() {
     dumpList("SMALL", gAllocator.smallHead)
     // LARGE blocks are maintained as list in gAllocator.largeHead via BlockHeader chain
     if let lh = gAllocator.largeHead {
-        var labelC = cstr("LARGE")
+        let labelC = cstr("LARGE")
         labelC.withUnsafeBufferPointer { buf in ft_print_zone_header(buf.baseAddress!, UnsafeRawPointer(lh)) }
         var cur: UnsafeMutableRawPointer? = lh
         while let b = cur {

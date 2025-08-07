@@ -207,7 +207,7 @@ public func ft_internal_free(_ payload: UnsafeMutableRawPointer?) {
     let oldSize = bh.pointee.size
     bh.pointee.isFree = true
     // coalesce prev and next
-    var merged = mergeWithPrevIfFree(bh)
+    let merged = mergeWithPrevIfFree(bh)
     mergeWithNextIfFree(merged)
     zh.pointee.usedBytes &-= oldSize
     // if zone is fully free (single free block spanning all), unmap

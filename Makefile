@@ -18,14 +18,14 @@ C_SOURCES := $(shell find src/c -name '*.c' 2>/dev/null)
 OBJ_DIR := $(BUILD_DIR)/obj
 OBJECTS := $(patsubst src/c/%.c,$(OBJ_DIR)/%.o,$(C_SOURCES))
 
-SWIFT_COMMON_FLAGS := -O -emit-library -parse-as-library -module-name FTMalloc
+SWIFT_COMMON_FLAGS := -O -emit-library -parse-as-library -module-name FTMalloc -wmo
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-    SWIFT_PLATFORM_FLAGS := -Xlinker -lpthread
+    SWIFT_PLATFORM_FLAGS := -Xcc -fPIC -Xlinker -lpthread
     NM := nm -D
 else
-    SWIFT_PLATFORM_FLAGS :=
+    SWIFT_PLATFORM_FLAGS := -Xcc -fPIC
     NM := nm -gU
 endif
 
@@ -71,34 +71,34 @@ $(OBJ_DIR)/%.o: src/c/%.c | $(OBJ_DIR)
 	$(CC) -fPIC -O2 -c $< -o $@
 
 $(BUILD_DIR)/tests/test_util: all $(BUILD_DIR)/tests tests/c/test_util.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_util tests/c/test_util.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_util tests/c/test_util.c -ldl
 
 $(BUILD_DIR)/tests/test_metadata: all $(BUILD_DIR)/tests tests/c/test_metadata.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_metadata tests/c/test_metadata.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_metadata tests/c/test_metadata.c -ldl
 
 $(BUILD_DIR)/tests/test_zone: all $(BUILD_DIR)/tests tests/c/test_zone.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_zone tests/c/test_zone.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_zone tests/c/test_zone.c -ldl
 
 $(BUILD_DIR)/tests/test_alloc: all $(BUILD_DIR)/tests tests/c/test_alloc.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_alloc tests/c/test_alloc.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_alloc tests/c/test_alloc.c -ldl
 
 $(BUILD_DIR)/tests/test_free: all $(BUILD_DIR)/tests tests/c/test_free.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_free tests/c/test_free.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_free tests/c/test_free.c -ldl
 
 $(BUILD_DIR)/tests/test_large: all $(BUILD_DIR)/tests tests/c/test_large.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_large tests/c/test_large.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_large tests/c/test_large.c -ldl
 
 $(BUILD_DIR)/tests/test_api_basic: all $(BUILD_DIR)/tests tests/c/test_api_basic.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_api_basic tests/c/test_api_basic.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_api_basic tests/c/test_api_basic.c -ldl
 
 $(BUILD_DIR)/tests/test_realloc: all $(BUILD_DIR)/tests tests/c/test_realloc.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_realloc tests/c/test_realloc.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_realloc tests/c/test_realloc.c -ldl
 
 $(BUILD_DIR)/tests/test_show: all $(BUILD_DIR)/tests tests/c/test_show.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_show tests/c/test_show.c -ldl
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_show tests/c/test_show.c -ldl
 
 $(BUILD_DIR)/tests/test_mt: all $(BUILD_DIR)/tests tests/c/test_mt.c
-	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_mt tests/c/test_mt.c -ldl -lpthread
+	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -o $(BUILD_DIR)/tests/test_mt tests/c/test_mt.c -ldl -lpthread
 
 test: all symbols tests-c
 
@@ -115,6 +115,7 @@ clean:
 	@rm -rf $(BUILD_DIR)
 
 fclean: clean
+	@rm -rf .build
 
 re: fclean all
 
