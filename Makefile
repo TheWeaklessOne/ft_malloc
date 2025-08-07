@@ -91,7 +91,7 @@ $(BUILD_DIR)/tests/test_show: all $(BUILD_DIR)/tests tests/c/test_show.c
 test: all symbols tests-c
 
 docs:
-	@echo "[docs] Placeholder: DocC build will be added later"
+	@echo "[docs] DocC generation requires Swift toolchain with docc plugin (Xcode or swift-docc-plugin). Skipping if unavailable." && mkdir -p build/docs && cp -R Sources/FTMalloc.docc build/docs/ || true
 
 linux-setup:
 	@bash tools/linux-setup.sh

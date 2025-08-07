@@ -1,0 +1,12 @@
+# ``FTMallocDocs``
+
+## Overview
+
+FTMalloc is a custom dynamic memory allocator primarily implemented in Swift with C-ABI exports. It provides drop-in replacements for `malloc`, `free`, `realloc` and an introspection function `show_alloc_mem`.
+
+### Topics
+
+- <doc:Design>
+- <doc:Usage>
+
+
