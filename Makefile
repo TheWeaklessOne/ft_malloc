@@ -32,19 +32,19 @@ endif
 
 .PHONY: all clean fclean re test docs symbols tests-c linux-setup linux-test help
 
-all: $(LIB_PATH) symlink
+all: $(LIB_PATH) $(LIB_SYMLINK)
 
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
-$(LIB_PATH): $(BUILD_DIR) $(OBJ_DIR) $(SWIFT_SOURCES) $(OBJECTS)
+$(LIB_PATH): $(SWIFT_SOURCES) $(OBJECTS) | $(BUILD_DIR)
 	@if [ -z "$(SWIFT_SOURCES)" ]; then \
 		echo "No Swift sources found in src/swift" >&2; \
 		exit 1; \
 	fi
 	$(SWIFTC) $(SWIFT_COMMON_FLAGS) $(SWIFT_PLATFORM_FLAGS) $(SWIFT_SOURCES) $(OBJECTS) -o $(LIB_PATH)
 
-symlink: $(LIB_PATH)
+$(LIB_SYMLINK): $(LIB_PATH)
 	@ln -sfn $(LIB_NAME) $(LIB_SYMLINK)
 
 symbols: $(LIB_PATH)
@@ -67,10 +67,10 @@ tests-c: $(TEST_BINS)
 		DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $$t | cat; \
 	done
 
-$(BUILD_DIR)/tests:
+$(BUILD_DIR)/tests: | $(BUILD_DIR)
 	@mkdir -p $(BUILD_DIR)/tests
 
-$(OBJ_DIR):
+$(OBJ_DIR): | $(BUILD_DIR)
 	@mkdir -p $(OBJ_DIR)
 
 $(OBJ_DIR)/%.o: src/c/%.c | $(OBJ_DIR)
