@@ -1,4 +1,5 @@
 # Cross-platform Makefile for FTMalloc (Swift-first allocator)
+.DEFAULT_GOAL := all
 
 SHELL := /bin/bash
 
@@ -29,7 +30,7 @@ else
     NM := nm -gU
 endif
 
-.PHONY: all clean fclean re test docs symbols tests-c linux-setup linux-test
+.PHONY: all clean fclean re test docs symbols tests-c linux-setup linux-test help
 
 all: $(LIB_PATH) symlink
 
@@ -49,17 +50,22 @@ symlink: $(LIB_PATH)
 symbols: $(LIB_PATH)
 	@echo "Exported symbols:" && $(NM) $(LIB_PATH) | egrep "[[:space:]](malloc|free|realloc|show_alloc_mem)$$" || true
 
-tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_DIR)/tests/test_zone $(BUILD_DIR)/tests/test_alloc $(BUILD_DIR)/tests/test_free $(BUILD_DIR)/tests/test_large $(BUILD_DIR)/tests/test_api_basic $(BUILD_DIR)/tests/test_realloc $(BUILD_DIR)/tests/test_show $(BUILD_DIR)/tests/test_mt
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_util | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_metadata | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_zone | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_alloc | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_free | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_large | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_api_basic | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_realloc | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_show | cat
-	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_mt | cat
+TEST_BINS := \
+  $(BUILD_DIR)/tests/test_util \
+  $(BUILD_DIR)/tests/test_metadata \
+  $(BUILD_DIR)/tests/test_zone \
+  $(BUILD_DIR)/tests/test_alloc \
+  $(BUILD_DIR)/tests/test_free \
+  $(BUILD_DIR)/tests/test_large \
+  $(BUILD_DIR)/tests/test_api_basic \
+  $(BUILD_DIR)/tests/test_realloc \
+  $(BUILD_DIR)/tests/test_show \
+  $(BUILD_DIR)/tests/test_mt
+
+tests-c: $(TEST_BINS)
+	@for t in $(TEST_BINS); do \
+		DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $$t | cat; \
+	done
 
 $(BUILD_DIR)/tests:
 	@mkdir -p $(BUILD_DIR)/tests
@@ -119,4 +125,11 @@ fclean: clean
 
 re: fclean all
 
+help:
+	@echo "Targets:" && \
+	printf "  %-12s %s\n" all "Build the library and symlink" && \
+	printf "  %-12s %s\n" test "Build and run tests" && \
+	printf "  %-12s %s\n" linux-test "Run build+tests inside multipass VM" && \
+	printf "  %-12s %s\n" clean "Remove build artifacts" && \
+	printf "  %-12s %s\n" fclean "Deep clean including SwiftPM .build"
 
