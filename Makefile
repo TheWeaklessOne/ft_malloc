@@ -47,7 +47,7 @@ symlink: $(LIB_PATH)
 symbols: $(LIB_PATH)
 	@echo "Exported symbols:" && $(NM) $(LIB_PATH) | egrep "[[:space:]](malloc|free|realloc|show_alloc_mem)$$" || true
 
-tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_DIR)/tests/test_zone $(BUILD_DIR)/tests/test_alloc $(BUILD_DIR)/tests/test_free $(BUILD_DIR)/tests/test_large $(BUILD_DIR)/tests/test_api_basic $(BUILD_DIR)/tests/test_realloc $(BUILD_DIR)/tests/test_show
+tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_DIR)/tests/test_zone $(BUILD_DIR)/tests/test_alloc $(BUILD_DIR)/tests/test_free $(BUILD_DIR)/tests/test_large $(BUILD_DIR)/tests/test_api_basic $(BUILD_DIR)/tests/test_realloc $(BUILD_DIR)/tests/test_show $(BUILD_DIR)/tests/test_mt
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_util | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_metadata | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_zone | cat
@@ -57,6 +57,7 @@ tests-c: $(BUILD_DIR)/tests/test_util $(BUILD_DIR)/tests/test_metadata $(BUILD_D
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_api_basic | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_realloc | cat
 	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_show | cat
+	@DYLD_LIBRARY_PATH=$(BUILD_DIR) LD_LIBRARY_PATH=$(BUILD_DIR) $(BUILD_DIR)/tests/test_mt | cat
 
 $(BUILD_DIR)/tests:
 	@mkdir -p $(BUILD_DIR)/tests
@@ -87,6 +88,9 @@ $(BUILD_DIR)/tests/test_realloc: all $(BUILD_DIR)/tests tests/c/test_realloc.c
 
 $(BUILD_DIR)/tests/test_show: all $(BUILD_DIR)/tests tests/c/test_show.c
 	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_show tests/c/test_show.c -ldl
+
+$(BUILD_DIR)/tests/test_mt: all $(BUILD_DIR)/tests tests/c/test_mt.c
+	$(CC) -std=c11 -Wall -Wextra -O2 -o $(BUILD_DIR)/tests/test_mt tests/c/test_mt.c -ldl -lpthread
 
 test: all symbols tests-c
 
