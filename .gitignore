@@ -1,0 +1,23 @@
+# Build artifacts
+build/
+.build/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.swiftdoc
+*.swiftmodule
+*.swiftsourceinfo
+
+# Xcode / SwiftPM
+.swiftpm/
+.DS_Store
+
+# Logs
+*.log
+
+# Linux VM artifacts
+tools/.cache/
+
+
