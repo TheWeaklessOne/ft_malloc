@@ -18,7 +18,7 @@ TMPDIR_HOST=$(mktemp -d)
 rsync -a --delete --exclude '.git' ./ "$TMPDIR_HOST/"
 
 echo "[linux-test] transferring project to VM" >&2
-multipass transfer "$TMPDIR_HOST" "$VM_NAME:/home/ubuntu/$PROJECT_NAME"
+multipass transfer --recursive "$TMPDIR_HOST/" "$VM_NAME:/home/ubuntu/$PROJECT_NAME"
 
 echo "[linux-test] building and testing inside VM" >&2
 multipass exec "$VM_NAME" -- bash -lc "cd $PROJECT_NAME && make clean all test | cat"
