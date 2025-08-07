@@ -27,7 +27,7 @@ else
     NM := nm -gU
 endif
 
-.PHONY: all clean fclean re test docs symbols tests-c
+.PHONY: all clean fclean re test docs symbols tests-c linux-setup linux-test
 
 all: $(LIB_PATH) symlink
 
@@ -92,6 +92,12 @@ test: all symbols tests-c
 
 docs:
 	@echo "[docs] Placeholder: DocC build will be added later"
+
+linux-setup:
+	@bash tools/linux-setup.sh
+
+linux-test:
+	@bash tools/linux-test.sh
 
 clean:
 	@rm -rf $(BUILD_DIR)
