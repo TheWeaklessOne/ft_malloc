@@ -4,6 +4,7 @@ import Glibc
 import Darwin
 #endif
 
+/// C-ABI: Return OS page size in bytes.
 @_cdecl("ft_page_size")
 public func ft_page_size() -> Int32 {
 #if os(Linux)
@@ -14,6 +15,7 @@ public func ft_page_size() -> Int32 {
 #endif
 }
 
+/// Return page size in bytes.
 @inline(__always)
 public func pageSize() -> Int {
     return Int(ft_page_size())

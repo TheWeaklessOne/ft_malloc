@@ -4,12 +4,15 @@ import Glibc
 import Darwin
 #endif
 
+/// C bridge: print a zone header label and start address.
 @_silgen_name("ft_print_zone_header")
 func ft_print_zone_header(_ label: UnsafePointer<CChar>, _ addr: UnsafeRawPointer)
 
+/// C bridge: print a single block range and the size (bytes).
 @_silgen_name("ft_print_block_range")
 func ft_print_block_range(_ start: UnsafeRawPointer, _ end: UnsafeRawPointer, _ size: UInt)
 
+/// C bridge: print the total sum of allocated bytes.
 @_silgen_name("ft_print_total")
 func ft_print_total(_ total: UInt)
 
@@ -19,6 +22,7 @@ private func cstr(_ s: String) -> [CChar] {
     return arr
 }
 
+/// C-ABI: show_alloc_mem implementation printing blocks by ascending address grouped by zone class.
 @_cdecl("ft_show_alloc_mem_impl")
 public func ft_show_alloc_mem_impl() {
     ft_mutex_init_if_needed()

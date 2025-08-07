@@ -4,6 +4,7 @@ import Glibc
 import Darwin
 #endif
 
+/// Align a user requested size to allocator's minimum alignment.
 @inline(__always)
 private func alignUserSize(_ size: Int) -> Int {
     let payloadAligned = alignUp(size, to: minimumAlignment)
@@ -29,6 +30,7 @@ private func setZoneListHead(for type: ZoneType, _ ptr: UnsafeMutableRawPointer?
 }
 
 @inline(__always)
+/// Choose an allocation class for a given payload size.
 private func chooseZoneType(for size: Int) -> ZoneType {
     if size <= tinyMaxBlockSize { return .tiny }
     if size <= smallMaxBlockSize { return .small }
@@ -56,7 +58,7 @@ private func prevBlock(_ bh: UnsafeMutablePointer<BlockHeader>) -> UnsafeMutable
     return p.assumingMemoryBound(to: BlockHeader.self)
 }
 
-// Try to find a free block of at least `need` bytes in existing zones of given type.
+/// Try to find a free block of at least `need` bytes in existing zones of given type.
 private func findFitInExistingZones(type: ZoneType, need: Int) -> (UnsafeMutablePointer<BlockHeader>, UnsafeMutablePointer<ZoneHeader>)? {
     var z = zoneListHead(for: type)
     while let base = z {
@@ -74,7 +76,7 @@ private func findFitInExistingZones(type: ZoneType, need: Int) -> (UnsafeMutable
     return nil
 }
 
-// Split a free block if remainder can hold a header and minimum payload.
+/// Split a free block if remainder can hold a header and minimum payload.
 @inline(__always)
 private func maybeSplitBlock(_ bh: UnsafeMutablePointer<BlockHeader>, need: Int, zoneHeader zh: UnsafeMutablePointer<ZoneHeader>) {
     let total = bh.pointee.size
@@ -98,7 +100,7 @@ private func maybeSplitBlock(_ bh: UnsafeMutablePointer<BlockHeader>, need: Int,
     }
 }
 
-// Allocate from a specific free block; assumes it fits.
+/// Allocate from a specific free block; assumes it fits.
 @inline(__always)
 private func allocateFromBlock(_ bh: UnsafeMutablePointer<BlockHeader>, need: Int, zoneHeader zh: UnsafeMutablePointer<ZoneHeader>) -> UnsafeMutableRawPointer {
     maybeSplitBlock(bh, need: need, zoneHeader: zh)
@@ -107,7 +109,7 @@ private func allocateFromBlock(_ bh: UnsafeMutablePointer<BlockHeader>, need: In
     return blockPayloadPtr(bh)
 }
 
-// Public internal allocator entry (not exported as libc API)
+/// Internal allocator entry point. Handles tiny/small via zones and large via direct mapping.
 public func ft_internal_alloc(_ requestSize: Int) -> UnsafeMutableRawPointer? {
     if requestSize <= 0 { return nil }
     let size = alignUserSize(requestSize)
@@ -153,7 +155,7 @@ public func ft_internal_alloc(_ requestSize: Int) -> UnsafeMutableRawPointer? {
     return nil
 }
 
-// Test-only exports for S05
+// MARK: - Test-only exports
 @_cdecl("ft_debug_alloc")
 public func ft_debug_alloc(_ size: Int32) -> UnsafeMutableRawPointer? {
     return ft_internal_alloc(Int(size))
@@ -167,6 +169,7 @@ public func ft_debug_free_no_coalesce(_ payload: UnsafeMutableRawPointer?) {
     bh.pointee.isFree = true
 }
 
+/// Merge a block with the next neighbor if it is free.
 @inline(__always)
 private func mergeWithNextIfFree(_ bh: UnsafeMutablePointer<BlockHeader>) {
     if let n = nextBlock(bh), n.pointee.isFree {
@@ -177,6 +180,7 @@ private func mergeWithNextIfFree(_ bh: UnsafeMutablePointer<BlockHeader>) {
     }
 }
 
+/// Merge a block with the previous neighbor if it is free and return the resulting header.
 @inline(__always)
 private func mergeWithPrevIfFree(_ bh: UnsafeMutablePointer<BlockHeader>) -> UnsafeMutablePointer<BlockHeader> {
     if let p = prevBlock(bh), p.pointee.isFree {
@@ -189,6 +193,7 @@ private func mergeWithPrevIfFree(_ bh: UnsafeMutablePointer<BlockHeader>) -> Uns
     return bh
 }
 
+/// Internal free implementation with coalescing and zone reclamation.
 public func ft_internal_free(_ payload: UnsafeMutableRawPointer?) {
     guard let p = payload else { return }
     let bh = (p - blockHeaderSize()).assumingMemoryBound(to: BlockHeader.self)
@@ -222,6 +227,7 @@ public func ft_internal_free(_ payload: UnsafeMutableRawPointer?) {
     }
 }
 
+/// Internal realloc with in-place grow/shrink when possible, otherwise move-and-free.
 public func ft_internal_realloc(_ ptr: UnsafeMutableRawPointer?, _ newUserSize: Int) -> UnsafeMutableRawPointer? {
     if ptr == nil { return ft_internal_alloc(newUserSize) }
     if newUserSize == 0 { ft_internal_free(ptr); return nil }

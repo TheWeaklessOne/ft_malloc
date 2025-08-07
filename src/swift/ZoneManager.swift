@@ -4,9 +4,11 @@ import Glibc
 import Darwin
 #endif
 
+/// Minimum capacity unit for free space accounting: header plus minimal payload.
 @inline(__always)
 private func zoneCapacityUnit() -> Int { return blockHeaderSize() + minimumAlignment }
 
+/// Compute zone mapping size for a given zone type as a page multiple that can hold at least 100 allocations.
 public func zoneSizeFor(type: ZoneType) -> Int {
     let header = zoneHeaderSize()
     let capacity = 128 * zoneCapacityUnit()
@@ -14,6 +16,7 @@ public func zoneSizeFor(type: ZoneType) -> Int {
     return ceilToPages(total)
 }
 
+/// Initialize a `ZoneHeader` in-place at mapping base.
 @inline(__always)
 private func writeZoneHeader(at base: UnsafeMutableRawPointer, type: ZoneType, totalSize: Int) {
     let hdrPtr = base.assumingMemoryBound(to: ZoneHeader.self)
@@ -47,6 +50,7 @@ private func blockHeaderFromPayload(_ payload: UnsafeMutableRawPointer) -> Unsaf
     return (payload - blockHeaderSize()).assumingMemoryBound(to: BlockHeader.self)
 }
 
+/// Map a new zone, initialize its header and a single large free block, and link it into the global list.
 public func createZone(type: ZoneType) -> UnsafeMutableRawPointer? {
     let size = zoneSizeFor(type: type)
     let prot = PROT_READ | PROT_WRITE
@@ -93,6 +97,7 @@ public func createZone(type: ZoneType) -> UnsafeMutableRawPointer? {
     return base
 }
 
+/// Unlink a zone from global lists and unmap its mapping.
 public func destroyZone(_ base: UnsafeMutableRawPointer) {
     let hdr = zoneHeader(at: base)
     let size = hdr.pointee.totalSize

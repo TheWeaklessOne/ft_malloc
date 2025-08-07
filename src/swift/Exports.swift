@@ -5,6 +5,7 @@ import Glibc
 import Darwin
 #endif
 
+/// C-ABI: malloc replacement. Returns NULL on error or zero-size.
 @_cdecl("ft_malloc_impl")
 public func ft_malloc_impl(_ size: UInt) -> UnsafeMutableRawPointer? {
     ft_mutex_init_if_needed()
@@ -15,6 +16,7 @@ public func ft_malloc_impl(_ size: UInt) -> UnsafeMutableRawPointer? {
     return result
 }
 
+/// C-ABI: free replacement. No-op on NULL.
 @_cdecl("ft_free_impl")
 public func ft_free_impl(_ ptr: UnsafeMutableRawPointer?) {
     ft_mutex_init_if_needed()
@@ -23,6 +25,7 @@ public func ft_free_impl(_ ptr: UnsafeMutableRawPointer?) {
     ft_internal_free(ptr)
 }
 
+/// C-ABI: realloc replacement.
 @_cdecl("ft_realloc_impl")
 public func ft_realloc_impl(_ ptr: UnsafeMutableRawPointer?, _ size: UInt) -> UnsafeMutableRawPointer? {
     ft_mutex_init_if_needed()

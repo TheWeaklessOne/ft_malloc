@@ -7,6 +7,9 @@ FTMalloc is a custom dynamic memory allocator primarily implemented in Swift wit
 ### Topics
 
 - <doc:Design>
+- <doc:Architecture>
+- <doc:BlockLayout>
+- <doc:ThreadSafety>
 - <doc:Usage>
 
 
