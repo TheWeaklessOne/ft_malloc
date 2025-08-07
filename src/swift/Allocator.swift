@@ -88,6 +88,8 @@ private func maybeSplitBlock(_ bh: UnsafeMutablePointer<BlockHeader>, need: Int,
         newBH.pointee.isFree = true
         newBH.pointee.prev = UnsafeMutableRawPointer(bh)
         newBH.pointee.next = bh.pointee.next
+        newBH.pointee.zoneBase = UnsafeMutableRawPointer(zh)
+        newBH.pointee.isLarge = false
         if let nxt = bh.pointee.next {
             blockHeaderPtr(nxt).pointee.prev = UnsafeMutableRawPointer(newBH)
         }
@@ -139,6 +141,61 @@ public func ft_debug_free_no_coalesce(_ payload: UnsafeMutableRawPointer?) {
     guard let p = payload else { return }
     let bh = (p - blockHeaderSize()).assumingMemoryBound(to: BlockHeader.self)
     bh.pointee.isFree = true
+}
+
+@inline(__always)
+private func mergeWithNextIfFree(_ bh: UnsafeMutablePointer<BlockHeader>) {
+    if let n = nextBlock(bh), n.pointee.isFree {
+        // absorb next
+        bh.pointee.size += blockHeaderSize() + n.pointee.size
+        bh.pointee.next = n.pointee.next
+        if let nn = n.pointee.next { blockHeaderPtr(nn).pointee.prev = UnsafeMutableRawPointer(bh) }
+    }
+}
+
+@inline(__always)
+private func mergeWithPrevIfFree(_ bh: UnsafeMutablePointer<BlockHeader>) -> UnsafeMutablePointer<BlockHeader> {
+    if let p = prevBlock(bh), p.pointee.isFree {
+        // absorb current into prev
+        p.pointee.size += blockHeaderSize() + bh.pointee.size
+        p.pointee.next = bh.pointee.next
+        if let nn = bh.pointee.next { blockHeaderPtr(nn).pointee.prev = UnsafeMutableRawPointer(p) }
+        return p
+    }
+    return bh
+}
+
+public func ft_internal_free(_ payload: UnsafeMutableRawPointer?) {
+    guard let p = payload else { return }
+    let bh = (p - blockHeaderSize()).assumingMemoryBound(to: BlockHeader.self)
+    if bh.pointee.isLarge {
+        // unlink from large list and munmap
+        if let prev = bh.pointee.prev { blockHeaderPtr(prev).pointee.next = bh.pointee.next }
+        if let next = bh.pointee.next { blockHeaderPtr(next).pointee.prev = bh.pointee.prev }
+        if gAllocator.largeHead == UnsafeMutableRawPointer(bh) { gAllocator.largeHead = bh.pointee.next }
+        let base = bh.pointee.zoneBase!
+        let mapSize = blockHeaderSize() + bh.pointee.size
+        _ = munmap(base, mapSize)
+        return
+    }
+    guard let zoneBase = bh.pointee.zoneBase else { return }
+    let zh = header(zoneBase)
+    let oldSize = bh.pointee.size
+    bh.pointee.isFree = true
+    // coalesce prev and next
+    var merged = mergeWithPrevIfFree(bh)
+    mergeWithNextIfFree(merged)
+    zh.pointee.usedBytes &-= oldSize
+    // if zone is fully free (single free block spanning all), unmap
+    if let first = zh.pointee.firstBlock {
+        let f = blockHeaderPtr(first)
+        if f == merged && f.pointee.prev == nil && f.pointee.next == nil {
+            let expected = zh.pointee.totalSize - zoneHeaderSize() - blockHeaderSize()
+            if f.pointee.isFree && f.pointee.size == expected {
+                destroyZone(zoneBase)
+            }
+        }
+    }
 }
 
 

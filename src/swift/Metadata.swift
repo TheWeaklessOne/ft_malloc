@@ -28,6 +28,8 @@ public struct BlockHeader {
     public var isFree: Bool
     public var prev: UnsafeMutableRawPointer?
     public var next: UnsafeMutableRawPointer?
+    public var zoneBase: UnsafeMutableRawPointer?
+    public var isLarge: Bool
 }
 
 @inline(__always)

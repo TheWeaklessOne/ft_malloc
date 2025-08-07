@@ -66,7 +66,7 @@ public func createZone(type: ZoneType) -> UnsafeMutableRawPointer? {
     let firstBlockPtr = base.advanced(by: zoneHeaderSize())
     let remaining = size - zoneHeaderSize()
     let bh = blockHeaderAt(firstBlockPtr)
-    bh.pointee = BlockHeader(size: remaining - blockHeaderSize(), isFree: true, prev: nil, next: nil)
+    bh.pointee = BlockHeader(size: remaining - blockHeaderSize(), isFree: true, prev: nil, next: nil, zoneBase: base, isLarge: false)
     hdr.pointee.firstBlock = UnsafeMutableRawPointer(bh)
 
     // Insert into global list for the type
@@ -121,6 +121,24 @@ public func ft_debug_zone_roundtrip(_ kind: Int32) -> Int32 {
     let size = Int32(zoneHeader(at: base).pointee.totalSize)
     destroyZone(base)
     return size
+}
+
+@_cdecl("ft_debug_count_zones")
+public func ft_debug_count_zones(_ kind: Int32) -> Int32 {
+    guard let zt = ZoneType(rawValue: kind) else { return -1 }
+    var count: Int32 = 0
+    var head: UnsafeMutableRawPointer?
+    switch zt {
+    case .tiny: head = gAllocator.tinyHead
+    case .small: head = gAllocator.smallHead
+    case .large: head = gAllocator.largeHead
+    }
+    var z = head
+    while let base = z {
+        count &+= 1
+        z = zoneHeader(at: base).pointee.nextZone
+    }
+    return count
 }
 
 

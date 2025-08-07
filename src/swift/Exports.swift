@@ -16,7 +16,10 @@ public func ft_malloc_impl(_ size: UInt) -> UnsafeMutableRawPointer? {
 
 @_cdecl("ft_free_impl")
 public func ft_free_impl(_ ptr: UnsafeMutableRawPointer?) {
-    // Will be implemented in S06; currently a no-op.
+    ft_mutex_init_if_needed()
+    ft_lock()
+    defer { ft_unlock() }
+    ft_internal_free(ptr)
 }
 
 @_cdecl("ft_realloc_impl")
