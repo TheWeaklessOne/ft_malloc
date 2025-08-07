@@ -112,7 +112,31 @@ public func ft_internal_alloc(_ requestSize: Int) -> UnsafeMutableRawPointer? {
     if requestSize <= 0 { return nil }
     let size = alignUserSize(requestSize)
     let zt = chooseZoneType(for: size)
-    if zt == .large { return nil } // handled in S07
+    if zt == .large {
+        // LARGE: dedicated mapping (header + payload)
+        let mapSize = blockHeaderSize() + size
+        let prot = PROT_READ | PROT_WRITE
+#if os(Linux)
+        let flags = MAP_PRIVATE | MAP_ANONYMOUS
+#else
+        let flags = MAP_PRIVATE | MAP_ANON
+#endif
+        let result = mmap(nil, mapSize, prot, flags, -1, 0)
+        if result == MAP_FAILED || result == UnsafeMutableRawPointer(bitPattern: -1) { return nil }
+        let base = UnsafeMutableRawPointer(result!)
+        let bh = blockHeaderPtr(base)
+        bh.pointee.size = size
+        bh.pointee.isFree = false
+        bh.pointee.prev = nil
+        bh.pointee.next = gAllocator.largeHead
+        bh.pointee.zoneBase = base
+        bh.pointee.isLarge = true
+        if let old = gAllocator.largeHead {
+            blockHeaderPtr(old).pointee.prev = UnsafeMutableRawPointer(bh)
+        }
+        gAllocator.largeHead = UnsafeMutableRawPointer(bh)
+        return blockPayloadPtr(bh)
+    }
 
     // try fit in existing zones
     if let (bh, zh) = findFitInExistingZones(type: zt, need: size) {
