@@ -1,0 +1,20 @@
+name: Linux VM smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vm-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sanity build with Swift container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: swift:5.9
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            apt-get update && apt-get install -y make gcc binutils
+            make -j2 && make test
+
+

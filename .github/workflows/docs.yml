@@ -1,0 +1,22 @@
+name: Docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/swift/**'
+      - 'Sources/FTMalloc.docc/**'
+      - 'Package.swift'
+      - 'Makefile'
+
+jobs:
+  build-docs:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate DocC
+        run: make docs
+
+

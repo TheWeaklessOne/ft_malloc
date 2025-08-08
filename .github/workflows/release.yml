@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-artifacts:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-14, ubuntu-latest ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends make gcc binutils ca-certificates
+      - name: Build (normal)
+        run: make -j2
+      - name: Build (demo)
+        run: make fclean && make DEMO=1 -j2
+      - name: Archive artifacts
+        run: |
+          mkdir -p dist
+          cp -v build/libft_malloc_* dist/
+          ls -l dist
+      - name: Upload release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
