@@ -1,21 +1,14 @@
 #include <pthread.h>
 
-static pthread_mutex_t g_mutex;
-static int g_inited = 0;
+// Single global mutex with static initializer to avoid races/UB.
+// No extra global state is used.
+static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void ft_mutex_init_if_needed(void) {
-    if (!g_inited) {
-        pthread_mutexattr_t attr;
-        pthread_mutexattr_init(&attr);
-        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
-        pthread_mutex_init(&g_mutex, &attr);
-        pthread_mutexattr_destroy(&attr);
-        g_inited = 1;
-    }
+    // No-op when using static initializer.
 }
 
 void ft_lock(void) {
-    ft_mutex_init_if_needed();
     pthread_mutex_lock(&g_mutex);
 }
 

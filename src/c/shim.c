@@ -22,4 +22,19 @@ void show_alloc_mem(void) {
     ft_show_alloc_mem_impl();
 }
 
+// Optional: demo mode query. The Swift side may export ft_is_demo_mode_enabled
+// only when built with -D FTMALLOC_DEMO. Declare it weak; return 0 if absent.
+#if defined(__APPLE__) || defined(__linux__)
+extern int ft_is_demo_mode_enabled(void) __attribute__((weak));
+#else
+extern int ft_is_demo_mode_enabled(void);
+#endif
+
+int ft_demo_mode(void) {
+    if (ft_is_demo_mode_enabled) {
+        return ft_is_demo_mode_enabled();
+    }
+    return 0;
+}
+
 

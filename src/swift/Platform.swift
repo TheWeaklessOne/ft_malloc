@@ -4,7 +4,7 @@ import Glibc
 import Darwin
 #endif
 
-/// C-ABI: Return OS page size in bytes.
+/// C‑ABI: Return OS page size in bytes.
 @_cdecl("ft_page_size")
 public func ft_page_size() -> Int32 {
 #if os(Linux)
@@ -16,6 +16,9 @@ public func ft_page_size() -> Int32 {
 }
 
 /// Return page size in bytes.
+///
+/// Thin Swift convenience wrapper over ``ft_page_size()`` used throughout
+/// the allocator to size mappings and compute alignment multiples.
 @inline(__always)
 public func pageSize() -> Int {
     return Int(ft_page_size())

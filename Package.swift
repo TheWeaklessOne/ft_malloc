@@ -2,16 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "FTMallocDocs",
+    name: "FTMalloc",
     platforms: [.macOS(.v13)],
     products: [
-        .library(name: "FTMallocDocs", targets: ["FTMallocDocs"]) 
+        .library(name: "FTMalloc", targets: ["FTMalloc"]) 
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0")
     ],
     targets: [
-        .target(name: "FTMallocDocs", path: "Sources/FTMalloc"),
+        // Main module points to the allocator sources
+        .target(name: "FTMalloc", path: "src/swift"),
     ]
 )
 
